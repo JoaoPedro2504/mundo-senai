@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SPACE TRIALS — GALACTIC REBIRTH · V7.3 COMBATE EQUILIBRADO</title>
+    <link rel="stylesheet" href="css/style.css?v=7_2">
+    
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="webgl-error" hidden>Seu navegador não iniciou a renderização WebGL 3D. Ative a aceleração de hardware e tente outro navegador.</div>
+        <!-- UI Overlay Base -->
+        <div id="ui-layer">
+            <div id="stage-banner" hidden>SETOR 1</div>
+            <div id="mobile-controls" hidden><button id="btn-fire-touch" class="touch-action">DISPARAR</button><button id="btn-special-touch" class="touch-action">ESPECIAL</button><button id="btn-weapon-touch" class="touch-action">ARMA</button><button id="btn-secondary-touch" class="touch-action">MÍSSEIS</button><button id="btn-pause" class="touch-action">Ⅱ</button></div>
+            <!-- Menu Principal -->
+            <div id="screen-menu" class="screen active">
+                <div class="v7-ribbon">VERSÃO V7.3 • COMBATE EQUILIBRADO</div><div class="logo-box">
+                    <h1 class="title">SPACE TRIALS</h1>
+                    <h2 class="subtitle">GALACTIC REBIRTH · V7.3 COMBATE EQUILIBRADO</h2>
+                </div>
+                <div class="menu-buttons">
+                    <button id="btn-play" class="cyber-btn primary">DECOLAR MISSÃO</button>
+                    <button id="btn-stage" class="cyber-btn">SELECIONAR FASE</button>
+                    <button id="btn-settings" class="cyber-btn">CONFIGURAÇÕES</button>
+                    <button id="btn-hangar" class="cyber-btn">HANGAR DE NAVES</button>
+                    <button id="btn-workshop" class="cyber-btn">OFICINA DE UPGRADES</button>
+                    <button id="btn-achievements" class="cyber-btn">CONQUISTAS</button>
+                </div>
+                <div class="menu-footer">V7.3 • ONDAS EQUILIBRADAS • 3D WEBGL • OFFLINE</div>
+            </div>
+
+            <!-- HUD do Jogo -->
+            <div id="screen-hud" class="screen">
+                <div id="v7-stamp">V7.3</div><div class="hud-top-wrapper">
+                    <div class="hud-top-bar">
+                        <div class="hud-card"><span class="hud-label">PILOTO</span><span id="hud-xp" class="hud-val">NV. 1</span></div><div class="hud-card"><span class="hud-label">FASE</span> <span id="hud-phase" class="hud-val">1/20</span></div>
+                        <div class="hud-card enemy-count"><span class="hud-label">INIMIGOS</span><span id="hud-enemies" class="hud-val">0</span></div><div class="hud-card"><span class="hud-label">PONTOS</span> <span id="hud-score" class="hud-val">0</span></div>
+                        <div class="hud-card"><span class="hud-label">SUCATA</span> <span id="hud-coins" class="hud-val">0</span></div>
+                        <div class="hud-card"><span class="hud-label">CHEFE EM</span><span id="hud-timer" class="hud-val">50s</span></div>
+                        <div class="hud-card special-card"><span class="hud-label">ESPECIAL [SHIFT]</span> <span id="hud-special" class="hud-val">PRONTO</span></div>
+                    </div>
+
+                    <!-- Barra de Vida do Boss (Reposicionada para não sobrepor) -->
+                    <div id="boss-hp-container" class="boss-hp-box hidden">
+                        <div class="boss-title-row">
+                            <span id="boss-name">KRAKEN CIBERNÉTICO</span>
+                            <span id="boss-phase-text" class="blinking-text">ALERTA DE CHEFE!</span>
+                        </div>
+                        <div class="boss-bar-outer">
+                            <div id="boss-bar-inner"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weapon-label" id="hud-weapon">LASER DUPLO</div><div class="shield-indicator" id="shield-indicator"></div>
+                <!-- Player Health Bar -->
+                <div class="player-hud-bottom">
+                    <div class="ship-badge">
+                        <span id="hud-ship-name">ALPHA VALKYRIE</span>
+                    </div>
+                    <div class="energy-shell"><div id="energy-bar"></div><span id="energy-text">100%</span></div><div class="health-bar-container">
+                        <div id="health-bar"></div>
+                        <span id="health-text">100 / 100</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hangar de Naves -->
+            <div id="screen-hangar" class="screen">
+                <h2 class="screen-title">HANGAR DE NAVEGAÇÃO</h2>
+                <div class="sucata-display">SUCATA DISPONÍVEL: <span id="hangar-coins">0</span> ⚙</div>
+                
+                <div class="hangar-grid" id="hangar-ships-container">
+                    <!-- Dinamicamente preenchido via JS -->
+                </div>
+
+                <button id="btn-hangar-back" class="cyber-btn back-btn">VOLTAR AO MENU</button>
+            </div>
+
+            <!-- Oficina (Upgrades) -->
+            <div id="screen-workshop" class="screen">
+                <h2 class="screen-title">OFICINA INTERGALÁCTICA</h2>
+                <div class="sucata-display">SUCATA DISPONÍVEL: <span id="ws-coins">0</span> ⚙</div>
+                
+                <div class="upgrades-list">
+                    <div class="upgrade-item">
+                        <div class="up-info">
+                            <span class="up-title">PODER DE FOGO (DANO)</span>
+                            <span class="up-desc">Aumenta o dano de todos os tiros primários</span>
+                        </div>
+                        <div class="up-action">
+                            <span class="up-lvl">Nível <span id="lvl-dmg">1</span>/10</span>
+                            <button id="btn-up-dmg" class="cyber-btn sm">MELHORAR (<span id="cost-dmg">50</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item">
+                        <div class="up-info">
+                            <span class="up-title">CADÊNCIA DE TIRO</span>
+                            <span class="up-desc">Aumenta a velocidade de disparo da nave</span>
+                        </div>
+                        <div class="up-action">
+                            <span class="up-lvl">Nível <span id="lvl-spd">1</span>/10</span>
+                            <button id="btn-up-spd" class="cyber-btn sm">MELHORAR (<span id="cost-spd">50</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item">
+                        <div class="up-info">
+                            <span class="up-title">BLINDAGEM DO CASCO</span>
+                            <span class="up-desc">Aumenta a integridade estrutural máxima</span>
+                        </div>
+                        <div class="up-action">
+                            <span class="up-lvl">Nível <span id="lvl-hp">1</span>/10</span>
+                            <button id="btn-up-hp" class="cyber-btn sm">MELHORAR (<span id="cost-hp">50</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item">
+                        <div class="up-info">
+                            <span class="up-title">IMÃ DE SUCATA</span>
+                            <span class="up-desc">Atrai sucatas e itens a uma distância maior</span>
+                        </div>
+                        <div class="up-action">
+                            <span class="up-lvl">Nível <span id="lvl-mag">1</span>/10</span>
+                            <button id="btn-up-mag" class="cyber-btn sm">MELHORAR (<span id="cost-mag">50</span>)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-ws-back" class="cyber-btn back-btn">VOLTAR AO MENU</button>
+            </div>
+
+            <!-- Conquistas -->
+            <div id="screen-achievements" class="screen">
+                <h2 class="screen-title">CONQUISTAS GALÁCTICAS</h2>
+                <div id="achievements-list" class="achievements-list"></div>
+                <button id="btn-ach-back" class="cyber-btn back-btn">VOLTAR AO MENU</button>
+            </div>
+
+            <!-- Resultado individual de missão e avanço manual -->
+            <div id="screen-results" class="screen">
+                <div class="results-icon">★ ★ ★</div>
+                <h2 id="result-title" class="screen-title">MISSÃO CONCLUÍDA</h2>
+                <p id="result-stage" class="result-stage">FASE 1</p>
+                <div class="stats-panel">
+                    <p>PONTUAÇÃO NA MISSÃO: <span id="result-score" class="highlight">0</span></p>
+                    <p>INIMIGOS DESTRUÍDOS: <span id="result-kills" class="highlight">0</span></p>
+                    <p>SUCATA RECOLHIDA: <span id="result-coins" class="highlight">0</span></p>
+                    <p>EXPERIÊNCIA OBTIDA: <span id="result-xp" class="highlight">0</span> XP</p>
+                </div>
+                <button id="result-next" class="cyber-btn primary">PRÓXIMA MISSÃO</button>
+                <button id="result-menu" class="cyber-btn">MENU PRINCIPAL</button>
+            </div>
+            <!-- Fim de Jogo -->
+            <div id="screen-gameover" class="screen">
+                <h2 id="go-title" class="go-header">NAVE DESTRUÍDA</h2>
+                <div class="stats-panel">
+                    <p>FASE ALCANÇADA: <span id="go-phase" class="highlight">1</span></p>
+                    <p>INIMIGOS DESTRUÍDOS: <span id="go-kills" class="highlight">0</span></p>
+                    <p>SUCATA RECOLHIDA: <span id="go-coins" class="highlight">0</span> ⚙</p>
+                    <p>PONTUAÇÃO TOTAL: <span id="go-score" class="highlight">0</span></p>
+                </div>
+                <div class="go-buttons">
+                    <button id="btn-restart" class="cyber-btn primary">REPETIR MISSÃO</button>
+                    <button id="btn-menu" class="cyber-btn">MENU PRINCIPAL</button>
+                </div>
+            </div>
+        </div>
+        <div id="pause-overlay" class="modal-overlay" hidden><div class="modal-panel"><h2>MISSÃO PAUSADA</h2><p>Pressione ESC para continuar</p><button id="btn-resume" class="cyber-btn primary">CONTINUAR</button></div></div>
+        <div id="stage-selector" class="modal-overlay" hidden><div class="modal-panel"><h2>ESCOLHA A FASE</h2><p>Complete missões para liberar setores</p><div id="stage-grid"></div><button id="btn-stage-close" class="cyber-btn">FECHAR</button></div></div>
+        <div id="settings-overlay" class="modal-overlay" hidden><div class="modal-panel"><h2>CONFIGURAÇÕES</h2><label>VOLUME DOS EFEITOS<input id="setting-volume" type="range" min="0" max="100" value="60"></label><label>VOLUME DA MÚSICA<input id="setting-music" type="range" min="0" max="100" value="32"></label><label>DIFICULDADE<select id="setting-difficulty"><option>NORMAL</option><option>HARD</option><option>NIGHTMARE</option></select></label><p>WASD / SETAS: mover • ESPAÇO: disparar • Q: alternar arma • E: torpedos • SHIFT: especial • ESC: pausa<br>Celular: arraste para mover; use os botões para atirar.</p><button id="btn-settings-close" class="cyber-btn">FECHAR</button></div></div>
+    </div>
+    <script src="js/game.js?v=7_2"></script>
+</body>
+</html>
